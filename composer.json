@@ -21,12 +21,10 @@
     },
     "autoload": {
         "psr-4": {
-            "Basttyy\\Reactphp-Database\\": "src/"
-        },
-        "files": [
-        ]
+            "Basttyy\\ReactphpDatabase\\": "src/"
+        }
     },
     "autoload-dev": {
-        "psr-4": { "Basttyy\\Tests\\Reactphp-Database\\": "tests/" }
+        "psr-4": { "Basttyy\\Tests\\ReactphpDatabase\\": "tests/" }
     }
 }
