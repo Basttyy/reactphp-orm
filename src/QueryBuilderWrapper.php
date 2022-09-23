@@ -1,12 +1,11 @@
 <?php
 declare(strict_types=1);
-namespace Basttyy\ReactphpDatabase;
+namespace Basttyy\ReactphpOrm;
 
 use Illuminate\Database\Capsule\Manager;
 use React\MySQL\ConnectionInterface;
 use React\MySQL\Factory;
 use React\MySQL\QueryResult;
-use Basttyy\ReactphpDatabase\QueryBuilder as Builder;
 
 class QueryBuilderWrapper
 {
@@ -43,7 +42,7 @@ class QueryBuilderWrapper
             'database' => $parts['path'],
         ]);
 
-        $builder = new Builder($capsule->getConnection());
+        $builder = new QueryBuilder($capsule->getConnection());
         //$builder = new QueryBuilder(new Connection($this->factory->createLazyConnection($uri)));
         $builder->setConnection($this->factory->createLazyConnection($uri));
 

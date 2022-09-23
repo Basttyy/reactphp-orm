@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace Basttyy\ReactphpDatabase;
+namespace Basttyy\ReactphpOrm;
 
 use Illuminate\Database\Query\Builder;
 use React\MySQL\ConnectionInterface;
