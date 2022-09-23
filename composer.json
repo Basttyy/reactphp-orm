@@ -1,5 +1,5 @@
 {
-    "name": "basttyy/reactphp-database",
+    "name": "basttyy/reactphp-orm",
     "description": "A database OMR for ReactPHP based on illuminate/database and react/mysql packages",
     "keywords": ["async", "ReactPHP", "ORM", "Database"],
     "license": "MIT",
@@ -21,10 +21,10 @@
     },
     "autoload": {
         "psr-4": {
-            "Basttyy\\ReactphpDatabase\\": "src/"
+            "Basttyy\\ReactphpOrm\\": "src/"
         }
     },
     "autoload-dev": {
-        "psr-4": { "Basttyy\\Tests\\ReactphpDatabase\\": "tests/" }
+        "psr-4": { "Basttyy\\Tests\\ReactphpOrm\\": "tests/" }
     }
 }

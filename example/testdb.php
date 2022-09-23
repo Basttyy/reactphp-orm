@@ -4,7 +4,7 @@ declare(strict_types=1);
 require './vendor/autoload.php';
 require './src/QueryBuilderWrapper.php';
 
-use Basttyy\ReactphpDatabase\QueryBuilderWrapper;
+use Basttyy\ReactphpOrm\QueryBuilderWrapper;
 use React\MySQL\Factory;
 use React\MySQL\QueryResult;
 
