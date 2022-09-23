@@ -1,4 +1,7 @@
 <?php
+declare(strict_types=1);
+namespace Basttyy\ReactphpDatabase;
+
 use Illuminate\Database\Query\Builder;
 use React\MySQL\ConnectionInterface;
 

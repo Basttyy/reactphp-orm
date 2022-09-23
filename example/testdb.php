@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 
-require 'QueryBuilderWrapper.php';
+require './vendor/autoload.php';
+require './src/QueryBuilderWrapper.php';
 
+use Basttyy\ReactphpDatabase\QueryBuilderWrapper;
 use React\MySQL\Factory;
 use React\MySQL\QueryResult;
-
-require_once __DIR__ . "/../vendor/autoload.php";
 
 $factory = new Factory();
 
