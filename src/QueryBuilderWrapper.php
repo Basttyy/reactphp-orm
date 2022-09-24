@@ -44,7 +44,8 @@ class QueryBuilderWrapper
 
         $builder = new QueryBuilder($capsule->getConnection());
         //$builder = new QueryBuilder(new Connection($this->factory->createLazyConnection($uri)));
-        $builder->setConnection($this->factory->createLazyConnection($uri));
+        $connection = new QueryConnection($this->factory->createLazyConnection($uri));
+        $builder->setConnection($connection);
 
         return $builder;
     }

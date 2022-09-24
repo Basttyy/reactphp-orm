@@ -4,6 +4,7 @@ namespace Basttyy\ReactphpOrm;
 
 use Exception;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\Grammars\Grammar;
 use Illuminate\Support\Arr;
 use React\MySQL\ConnectionInterface;
 use React\MySQL\QueryResult;
@@ -14,15 +15,56 @@ use React\Promise\PromiseInterface;
 class QueryBuilder extends Builder
 {
     /**
-     * @var ConnectionInterface
+     * @var \Illuminate\Database\ConnectionInterface|QueryConnection
      */
     private $_connection;
+
+    /**
+     * The database query post processor instance.
+     *
+     * @var \Basttyy\ReactphpOrm\Processor
+     */
+    public $processor;
+
+    // /**
+    //  * Create a new query builder instance.
+    //  *
+    //  * @param  \Illuminate\Database\ConnectionInterface|ConnectionInterface  $connection
+    //  * @param  \Illuminate\Database\Query\Grammars\Grammar|null  $grammar
+    //  * @param  \Basttyy\ReactphpOrm\Processor|null  $processor
+    //  * @return void
+    //  */
+    // public function __construct(\Illuminate\Database\ConnectionInterface|ConnectionInterface $connection,
+    //                             Grammar $grammar = null,
+    //                             Processor $processor = null)
+    // {
+    //     $this->connection = $connection;
+    //     $this->grammar = $grammar ?: $connection->getQueryGrammar();
+    //     $this->processor = $processor ?: $connection->getPostProcessor();
+    // }
+
+    /**
+     * Create a new query builder instance.
+     *
+     * @param  \Illuminate\Database\ConnectionInterface|QueryConnection  $connection
+     * @param  \Illuminate\Database\Query\Grammars\Grammar|null  $grammar
+     * @param  QueryProcessor|null  $processor
+     * @return void
+     */
+    public function __construct(\Illuminate\Database\ConnectionInterface|QueryConnection $connection,
+                                Grammar $grammar = null,
+                                QueryProcessor $processor = null)
+    {
+        $this->_connection = $connection;
+        $this->grammar = $grammar ?: $connection->getQueryGrammar();
+        $this->processor = $processor ?: $connection->getPostProcessor();
+    }
 
     /**
      * Quit the connection to the db
      * 
      * @var void
-     * @return void
+     * @return PromiseInterface
      */
     public function quit()
     {
@@ -96,12 +138,23 @@ class QueryBuilder extends Builder
     /**
      * Set the connetion object
      * 
-     * @param ConnectionInterface $connection
+     * @param QueryConnection $connection
      * @return void
      */
-    public function setConnection(ConnectionInterface $connection)
+    public function setConnection(QueryConnection $connection)
     {
         $this->_connection = $connection;
+    }
+
+    /**
+     * Get the connetion object
+     * 
+     * @param void
+     * @return QueryConnection
+     */
+    public function getConnection()
+    {
+        return $this->_connection;
     }
 
       /**
@@ -166,7 +219,7 @@ class QueryBuilder extends Builder
     {
         $sql = $this->toSql();
         echo $sql.PHP_EOL.PHP_EOL;
-        return $this->_connection->query($sql, $this->getBindings());
+        return $this->_connection->makeQuery($sql, $this->getBindings());
     }
 
     /**
@@ -220,5 +273,46 @@ class QueryBuilder extends Builder
         $this->columns = $original;
 
         return $result;
+    }
+    
+    /**
+     * Insert new records into the database.
+     *
+     * @param  array  $values
+     * @return PromiseInterface<bool>
+     */
+    public function insert(array $values)
+    {
+        // Since every insert gets treated like a batch insert, we will make sure the
+        // bindings are structured in a way that is convenient when building these
+        // inserts statements by verifying these elements are actually an array.
+        if (empty($values)) {
+            return true;
+        }
+
+        if (! is_array(reset($values))) {
+            $values = [$values];
+        }
+
+        // Here, we will sort the insert keys for every record so that each insert is
+        // in the same order for the record. We need to make sure this is the case
+        // so there are not any errors or problems when inserting these records.
+        else {
+            foreach ($values as $key => $value) {
+                ksort($value);
+
+                $values[$key] = $value;
+            }
+        }
+
+        $this->applyBeforeQueryCallbacks();
+
+        // Finally, we will run this query against the database connection and return
+        // the results. We will need to also flatten these bindings before running
+        // the query so they are all in one huge, flattened array for execution.
+        return $this->_connection->insert(
+            $this->grammar->compileInsert($this, $values),
+            $this->cleanBindings(Arr::flatten($values, 1))
+        );
     }
 }
