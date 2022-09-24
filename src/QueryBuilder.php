@@ -233,22 +233,24 @@ class QueryBuilder extends Builder
         return new Promise(function ($resolve, $reject) use ($columns) {
             $this->onceWithColumns(Arr::wrap($columns), function () {
                 return $this->processor->processSelect($this, $this->runSelect());
-            })->then(function(QueryResult $data) use ($resolve){
-                $resolve(collect($data->resultRows));
+            })->then(function(array $data) use ($resolve){
+                $resolve(collect($data));
             }, function(Exception $err) use ($reject) {
                 $reject($err);
             });
         });
     }
-
+    
     /**
      * Run the query as a "select" statement against the connection.
      *
-     * @return PromiseInterface<QueryResult|Exception>
+     * @return PromiseInterface<array|Exception>
      */
     protected function runSelect()
     {
-        return $this->query();
+        return $this->_connection->select(
+            $this->toSql(), $this->getBindings(), false, false, false, false
+        );
     }
 
     /**
