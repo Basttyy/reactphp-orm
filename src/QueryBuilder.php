@@ -22,7 +22,7 @@ class QueryBuilder extends Builder
     /**
      * The database query post processor instance.
      *
-     * @var \Basttyy\ReactphpOrm\Processor
+     * @var \Basttyy\ReactphpOrm\QueryProcessor
      */
     public $processor;
 
@@ -57,7 +57,6 @@ class QueryBuilder extends Builder
     {
         $this->_connection = $connection;
         $this->grammar = $grammar ?: $connection->getQueryGrammar();
-        $this->processor = $processor ?: $connection->getPostProcessor();
     }
 
     /**
@@ -144,6 +143,7 @@ class QueryBuilder extends Builder
     public function setConnection(QueryConnection $connection)
     {
         $this->_connection = $connection;
+        $this->processor = $this->_connection->getPostProcessor();
     }
 
     /**
@@ -289,7 +289,7 @@ class QueryBuilder extends Builder
         // bindings are structured in a way that is convenient when building these
         // inserts statements by verifying these elements are actually an array.
         if (empty($values)) {
-            return true;
+            return \React\Promise\resolve(true);
         }
 
         if (! is_array(reset($values))) {
@@ -316,5 +316,23 @@ class QueryBuilder extends Builder
             $this->grammar->compileInsert($this, $values),
             $this->cleanBindings(Arr::flatten($values, 1))
         );
+    }
+
+    /**
+     * Insert a new record and get the value of the primary key.
+     *
+     * @param  array  $values
+     * @param  string|null  $sequence
+     * @return PromiseInterface<int|Exception>
+     */
+    public function insertGetId(array $values, $sequence = null)
+    {
+        $this->applyBeforeQueryCallbacks();
+
+        $sql = $this->grammar->compileInsertGetId($this, $values, $sequence);
+
+        $values = $this->cleanBindings($values);
+
+        return $this->processor->processInsertGetId($this, $sql, $values, $sequence);
     }
 }

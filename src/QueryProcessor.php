@@ -1,18 +1,19 @@
 <?php
 namespace Basttyy\ReactphpOrm;
 
-use Basttyy\ReactphpOrm\QueryBuilder as Builder;
+use Exception;
+use Illuminate\Database\Query\Processors\Processor;
 
-class QueryProcessor
+class QueryProcessor extends Processor
 {
     /**
      * Process the results of a "select" query.
      *
-     * @param  Builder  $query
-     * @param  array  $results
-     * @return array
+     * @param  QueryBuilder  $query
+     * @param  PromiseInterface<array>  $results
+     * @return PromiseInterface<array>
      */
-    public function processSelect(Builder $query, $results)
+    public function processSelect($query, $results)
     {
         return $results;
     }
@@ -20,19 +21,15 @@ class QueryProcessor
     /**
      * Process an  "insert get ID" query.
      *
-     * @param  Builder  $query
+     * @param  QueryBuilder  $query
      * @param  string  $sql
      * @param  array  $values
      * @param  string|null  $sequence
-     * @return int
+     * @return PromiseInterface<int|Exception>
      */
-    public function processInsertGetId(Builder $query, $sql, $values, $sequence = null)
+    public function processInsertGetId($query, $sql, $values, $sequence = null)
     {
-        $query->getConnection()->insert($sql, $values);
-
-        $id = $query->getConnection()->getPdo()->lastInsertId($sequence);
-
-        return is_numeric($id) ? (int) $id : $id;
+        return $query->getConnection()->insert($sql, $values, true);
     }
 
     /**

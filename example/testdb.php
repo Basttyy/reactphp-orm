@@ -16,7 +16,7 @@ $factory = new Factory();
 
 $connection = (new QueryBuilderWrapper($factory))->createLazyConnection('root:123456789@localhost/react-database');
 
-$type = $argv[1] ? $argv[1] : 'query';
+$type = isset($argv[1]) ? $argv[1] : 'query';
 
 switch ($type) {
     case 'query':
@@ -26,7 +26,7 @@ switch ($type) {
         runGet($connection);
         break;
     case 'insert':
-        runInsert($connection);
+        runInsert($connection,  isset($argv[2]) ? $argv[2] : 'false');
         break;
     default:
         runQuery($connection);
@@ -58,7 +58,7 @@ function runGet(PromiseInterface|QueryBuilder $connection)
     );
 }
 
-function runInsert(PromiseInterface|QueryBuilder $connection)
+function runInsert(PromiseInterface|QueryBuilder $connection, string $getid)
 {
     $values = [
         'username' => 'basttyy',
@@ -66,14 +66,26 @@ function runInsert(PromiseInterface|QueryBuilder $connection)
         'lastname' => 'mamman',
         'email' => 'basttyy@mail.com'
     ];
-    $connection->from('users')->insert($values)->then(
-        function (bool $status) {
-            echo "inserted successfully ".PHP_EOL;
-        },
-        function (Exception $ex) {
-            echo $ex->getMessage().PHP_EOL;
-        }
-    );
+    
+    if ($getid === "true") {
+        $connection->from('users')->insertGetId($values)->then(
+            function (int $id) {
+                echo "inserted successfully with ID: ".$id.PHP_EOL;
+            },
+            function (Exception $ex) {
+                echo $ex->getMessage().PHP_EOL;
+            }
+        );
+    } else {
+        $connection->from('users')->insert($values)->then(
+            function (bool $status) {
+                echo "inserted successfully ".PHP_EOL;
+            },
+            function (Exception $ex) {
+                echo $ex->getMessage().PHP_EOL;
+            }
+        );
+    }
 }
 
 $connection->quit();

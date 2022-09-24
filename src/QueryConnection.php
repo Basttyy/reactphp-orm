@@ -78,11 +78,23 @@ class QueryConnection extends Connection
      *
      * @param  string  $query
      * @param  array  $bindings
-     * @return PromiseInterface<bool>
+     * @return PromiseInterface<bool|int|Exception>
      */
-    public function insert($query, $bindings = [])
+    public function insert($query, $bindings = [], $getid = false)
     {
-        return $this->statement($query, $bindings);
+        return new \React\Promise\Promise(function ($resolve, $reject) use ($query, $bindings, $getid) {
+            $this->statement($query, $bindings)->then(
+                function (bool|int $id) use ($getid, $resolve, $reject) {
+                    if ($getid)
+                        \is_numeric($id) ? $resolve($id) : $reject($id);
+                    if (!$getid)
+                        $resolve((bool)$id);
+                },
+                function (bool|Exception $ex) use ($reject) {
+                    $reject($ex);
+                }
+            );
+        });
     }
     
     /**
@@ -143,25 +155,18 @@ class QueryConnection extends Connection
             $deffered = new Deferred();
             $this->makeQuery($query, $this->prepareBindings($bindings))->then(
                 function (QueryResult $command) use ($deffered) {
-                    echo "query executed success".PHP_EOL;
                     $this->recordsHaveBeenModified();
                     if (isset($command->resultRows)) {
                         // this is a response to a SELECT etc. with some rows (0+)
-                        print_r($command->resultRows);
                         echo count($command->resultRows) . ' row(s) in set' . PHP_EOL;
                         $deffered->resolve(true);
                     } else {
                         // this is an OK message in response to an UPDATE etc.
-                        if ($command->insertId !== 0) {
-                            var_dump('last insert ID', $command->insertId);
-                        }
                         echo 'Query OK, ' . $command->affectedRows . ' row(s) affected' . PHP_EOL;
-                        $status = $command->insertId < 1 ? false : $command->insertId;
-                        $deffered->resolve($status);
+                        $command->insertId < 1 ? $deffered->reject(false) : $deffered->resolve($command->insertId);
                     }
                 },
                 function (Exception $error) use ($deffered) {
-                    echo 'Error: ' . $error->getMessage() . PHP_EOL;
                     $deffered->reject($error);
                 }
             );
