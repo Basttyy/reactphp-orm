@@ -84,6 +84,47 @@ class QueryConnection extends Connection
     {
         return $this->statement($query, $bindings);
     }
+    
+    /**
+     * Run a select statement against the database.
+     *
+     * @param  string  $query
+     * @param  array  $bindings
+     * @param  bool  $useReadPdo
+     * @return PromiseInterface<array|Exception>
+     */
+    public function select($query, $bindings = [], $lockForUpdate = false, $forShare = false, $nowait = false, $skip_locked = false)
+    {
+        return $this->run($query, $bindings, function ($query, $bindings) use ($lockForUpdate, $forShare, $nowait, $skip_locked) {
+            if ($this->pretending()) {
+                return \React\Promise\resolve([]);
+            }
+
+            ///TODO: to be implemented later
+            // $query = $skip_locked && !$nowait ? $query." skip locked" : $query;
+            // $query = $nowait && !$skip_locked ? $query." nowait" : $query;
+            // $query = $forShare && !$lockForUpdate ? $query." for share" : $query;
+            // $query = $lockForUpdate && !$forShare ? $query." for update" : $query;
+            $deferred = new Deferred();
+            // For select statements, we'll simply execute the query and return an array
+            // of the database result set. Each element in the array will be a single
+            // row from the database table, and will either be an array or objects.
+
+            $this->makeQuery($query, $this->prepareBindings($bindings))->then(
+                function (QueryResult $command) use ($deferred) {
+                    echo "query ran success".PHP_EOL;
+                    $rows = $command->resultRows;
+                    $deferred->resolve($rows);
+                },
+                function (Exception $error) use($deferred){
+                    echo 'Error: ' . $error->getMessage() . PHP_EOL;
+                    $deferred->reject($error);
+                }
+            );
+
+            return $deferred->promise();
+        });
+    }
 
     /**
      * Execute an SQL statement and return the boolean result.
