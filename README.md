@@ -68,14 +68,54 @@ $connection->from('users')->where('status', 'active')->get()->then(
 );
 
 ```
-## Query Features Roadmap
-
+## Query Features Coverage Map
 
  * [x] query()
  * [x] get()
  * [x] insert()
- * [x] first()
+ * [ ] delete
+ * [ ] Update
+ * [ ] first()
  * [ ] find()
+ * [ ] count
+ * [ ] exists
+ * [ ] InsertOrIgnore
+ * [ ] InsertUsing
+ * [ ] UpdateOrInsert
+ * [ ] UpdateFrom
+ * [ ] Upsert
+ * [ ] pluck
+ * [ ] doesntexist
+ * [ ] existsor
+ * [ ] doesntexistor
+ * [ ] Increment
+ * [ ] decrement
+ * [ ] lock
+ * [ ] lockforupdate
+ * [ ] findor
+ * [ ] value
+ * [ ] paginate
+ * [ ] simplepaginate
+ * [ ] cursopaginate
+ * [ ] getcountforpagination
+ * [ ] getpaginationcountquery
+ * [ ] cursor
+ * [ ] min
+ * [ ] max
+ * [ ] sum
+ * [ ] avg
+ * [ ] average
+ * [ ] aggregate
+ * [ ] numericaggregate
+ * [ ] truncate
+ * [ ] newQuery
+ * [ ] forSubQuery
+ * [ ] raw
+ * [ ] getProcessor
+ * [ ] useWritePDO
+ * [ ] clone
+ * [ ] cloneWithout
+ * [ ] cloneWithoutBindings
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
