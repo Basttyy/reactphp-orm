@@ -68,6 +68,14 @@ $connection->from('users')->where('status', 'active')->get()->then(
 );
 
 ```
+## Query Features Roadmap
+
+
+ * [x] query()
+ * [x] get()
+ * [x] insert()
+ * [x] first()
+ * [ ] find()
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
