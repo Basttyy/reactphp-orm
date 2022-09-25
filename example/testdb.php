@@ -2,11 +2,9 @@
 declare(strict_types=1);
 
 require './vendor/autoload.php';
-require './src/QueryBuilderWrapper.php';
 
 use Basttyy\ReactphpOrm\QueryBuilderWrapper;
 use Basttyy\ReactphpOrm\QueryBuilder;
-use React\MySQL\Exception as QueryException;
 use Illuminate\Support\Collection;
 use React\MySQL\Factory;
 use React\MySQL\QueryResult;
@@ -64,7 +62,7 @@ function runInsert(PromiseInterface|QueryBuilder $connection, string $getid)
         'username' => 'basttyy',
         'firstname' => 'abdulbasit',
         'lastname' => 'mamman',
-        'email' => 'basttyy@mail.com'
+        'email' => 'basttyydev@mail.com'
     ];
     
     if ($getid === "true") {
