@@ -4,7 +4,7 @@
 
 ## Project Informations
 
-(https://img.shields.io/badge/coverage-5%25-orange)
+[![Code Coverage](https://img.shields.io/badge/coverage-5%25-orange)]()
 
 ## Installation
 
