@@ -2,6 +2,10 @@
 
  A database ORM for reactphp based on [illuminate/database](https://packagist.org/packages/illuminate/database) and [react/mysql](https://packagist.org/packages/react/mysql)
 
+## Project Informations
+
+(https://img.shields.io/badge/coverage-5%25-orange)
+
 ## Installation
 
 Use php package manager [composer](https://getcomposer.org/download/) to install reactphp-orm.
