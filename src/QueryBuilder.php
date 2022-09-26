@@ -370,7 +370,7 @@ class QueryBuilder extends Builder
 
         $this->applyBeforeQueryCallbacks();
 
-        return $this->connection->delete(
+        return $this->_connection->delete(
             $this->grammar->compileDelete($this), $this->cleanBindings(
                 $this->grammar->prepareBindingsForDelete($this->bindings)
             )

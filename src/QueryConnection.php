@@ -224,6 +224,7 @@ class QueryConnection extends Connection
      */
     public function affectingStatement($query, $bindings = [])
     {
+        echo $query.PHP_EOL.PHP_EOL;
         return $this->run($query, $bindings, function ($query, $bindings) {
             if ($this->pretending()) {
                 return \React\Promise\resolve(0);
