@@ -29,6 +29,9 @@ switch ($type) {
     case 'runupdate':
         runUpdate($connection);
         break;
+    case 'rundelete':
+        runDelete($connection);
+        break;
     default:
         runQuery($connection);
 }
@@ -98,7 +101,19 @@ function runUpdate(PromiseInterface|QueryBuilder $connection)
 
     $connection->from('users')->where('id', 9)->update($values)->then(
         function (int $result) {
-            echo "updated record id $result successfully".PHP_EOL;
+            echo "updated $result records successfully".PHP_EOL;
+        },
+        function (Exception $ex) {
+            echo $ex->getMessage().PHP_EOL;
+        }
+    );
+}
+
+function runDelete(PromiseInterface|QueryBuilder $connection)
+{
+    $connection->from('users')->where('id', 9)->delete()->then(
+        function (int $result) {
+            echo "deleted $result record successfully".PHP_EOL;
         },
         function (Exception $ex) {
             echo $ex->getMessage().PHP_EOL;

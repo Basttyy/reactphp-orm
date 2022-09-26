@@ -352,4 +352,28 @@ class QueryBuilder extends Builder
             $this->grammar->prepareBindingsForUpdate($this->bindings, $values)
         ));
     }
+
+    /**
+     * Delete records from the database.
+     *
+     * @param  mixed  $id
+     * @return PromiseInterface<int|Exception>
+     */
+    public function delete($id = null)
+    {
+        // If an ID is passed to the method, we will set the where clause to check the
+        // ID to let developers to simply and quickly remove a single row from this
+        // database without manually specifying the "where" clauses on the query.
+        if (! is_null($id)) {
+            $this->where($this->from.'.id', '=', $id);
+        }
+
+        $this->applyBeforeQueryCallbacks();
+
+        return $this->_connection->delete(
+            $this->grammar->compileDelete($this), $this->cleanBindings(
+                $this->grammar->prepareBindingsForDelete($this->bindings)
+            )
+        );
+    }
 }

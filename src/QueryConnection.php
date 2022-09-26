@@ -125,6 +125,18 @@ class QueryConnection extends Connection
     {
         return $this->affectingStatement($query, $bindings);
     }
+
+    /**
+     * Run a delete statement against the database.
+     *
+     * @param  string  $query
+     * @param  array  $bindings
+     * @return PromiseInterface<int|Exception>
+     */
+    public function delete($query, $bindings = [])
+    {
+        return $this->affectingStatement($query, $bindings);
+    }
     
     /**
      * Run a select statement against the database.
@@ -212,6 +224,7 @@ class QueryConnection extends Connection
      */
     public function affectingStatement($query, $bindings = [])
     {
+        echo $query.PHP_EOL.PHP_EOL;
         return $this->run($query, $bindings, function ($query, $bindings) {
             if ($this->pretending()) {
                 return \React\Promise\resolve(0);
