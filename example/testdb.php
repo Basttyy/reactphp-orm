@@ -26,6 +26,9 @@ switch ($type) {
     case 'insert':
         runInsert($connection,  isset($argv[2]) ? $argv[2] : 'false');
         break;
+    case 'runupdate':
+        runUpdate($connection);
+        break;
     default:
         runQuery($connection);
 }
@@ -84,6 +87,23 @@ function runInsert(PromiseInterface|QueryBuilder $connection, string $getid)
             }
         );
     }
+}
+
+function runUpdate(PromiseInterface|QueryBuilder $connection)
+{
+    $values = [
+        'username' => 'bushman',
+        'firstname' => 'abdulbasit',
+    ];
+
+    $connection->from('users')->where('id', 9)->update($values)->then(
+        function (int $result) {
+            echo "updated record id $result successfully".PHP_EOL;
+        },
+        function (Exception $ex) {
+            echo $ex->getMessage().PHP_EOL;
+        }
+    );
 }
 
 $connection->quit();
