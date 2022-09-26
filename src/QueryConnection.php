@@ -11,6 +11,7 @@ use React\MySQL\QueryResult;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
 use Basttyy\ReactphpOrm\QueryProcessor as Processor;
+use React\Promise\Promise;
 
 class QueryConnection extends Connection
 {
@@ -73,6 +74,21 @@ class QueryConnection extends Connection
         return $this->pdo;
     }
 
+    
+    /**
+     * Get the current PDO connection.
+     *
+     * @return \React\MySQL\ConnectionInterface
+     */
+    public function getPdo()
+    {
+        if ($this->pdo instanceof Closure) {
+            return $this->pdo = call_user_func($this->pdo);
+        }
+
+        return $this->pdo;
+    }
+
     /**
      * Run an insert statement against the database.
      *
@@ -95,6 +111,19 @@ class QueryConnection extends Connection
                 }
             );
         });
+    }
+
+    
+    /**
+     * Run an update statement against the database.
+     *
+     * @param  string  $query
+     * @param  array  $bindings
+     * @return PromiseInterface<int|Exception>
+     */
+    public function update($query, $bindings = [])
+    {
+        return $this->affectingStatement($query, $bindings);
     }
     
     /**
@@ -171,6 +200,69 @@ class QueryConnection extends Connection
                 }
             );
             return $deffered->promise();
+        });
+    }
+    
+    /**
+     * Run an SQL statement and get the number of rows affected.
+     *
+     * @param  string  $query
+     * @param  array  $bindings
+     * @return PromiseInterface<int|Exception>
+     */
+    public function affectingStatement($query, $bindings = [])
+    {
+        return $this->run($query, $bindings, function ($query, $bindings) {
+            if ($this->pretending()) {
+                return \React\Promise\resolve(0);
+            }
+
+            // For update or delete statements, we want to get the number of rows affected
+            // by the statement and return that back to the developer. We'll first need
+            // to execute the statement and then we'll use QueryResult to fetch the affected.
+
+            $deffered = new Deferred();
+            $this->makeQuery($query, $this->prepareBindings($bindings))->then(
+                function (QueryResult $command) use ($deffered) {
+                    $this->recordsHaveBeenModified();
+                    // this is an OK message in response to an UPDATE etc.
+                    echo 'Query OK, ' . $command->affectedRows . ' row(s) affected' . PHP_EOL;
+                    $command->affectedRows < 1 ? $deffered->reject(false) : $deffered->resolve($command->affectedRows);
+                },
+                function (Exception $error) use ($deffered) {
+                    $deffered->reject($error);
+                }
+            );
+            return $deffered->promise();
+        });
+    }
+
+    /**
+     * Run a raw, unprepared query against the PDO connection.
+     *
+     * @param  string  $query
+     * @return PromiseInterface<bool|Exception>
+     */
+    public function unprepared($query)
+    {
+        return $this->run($query, [], function ($query) {
+            if ($this->pretending()) {
+                return \React\Promise\resolve(true);
+            }
+
+            return new \React\Promise\Promise(function ($query, $resolve, $reject) {
+                $this->getPdo()->query($query, [])->then(
+                    function (QueryResult $result) use ($resolve, $reject) {
+                        $this->recordsHaveBeenModified(true);
+                        $resolve(true);
+                    },
+                    function (Exception $ex) use ($resolve, $reject) {
+                        echo $ex->getMessage();
+                        $this->recordsHaveBeenModified(false);
+                        $reject(false);
+                    }
+                );
+            });
         });
     }
 

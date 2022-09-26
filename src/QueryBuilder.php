@@ -335,4 +335,21 @@ class QueryBuilder extends Builder
 
         return $this->processor->processInsertGetId($this, $sql, $values, $sequence);
     }
+
+    /**
+     * Update records in the database.
+     *
+     * @param  array  $values
+     * @return PromiseInterface<int|Exception>
+     */
+    public function update(array $values)
+    {
+        $this->applyBeforeQueryCallbacks();
+
+        $sql = $this->grammar->compileUpdate($this, $values);
+
+        return $this->_connection->update($sql, $this->cleanBindings(
+            $this->grammar->prepareBindingsForUpdate($this->bindings, $values)
+        ));
+    }
 }
