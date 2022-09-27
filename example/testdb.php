@@ -17,6 +17,9 @@ $connection = (new QueryBuilderWrapper($factory))->createLazyConnection('root:12
 $type = isset($argv[1]) ? $argv[1] : 'query';
 
 switch ($type) {
+    case 'runfind':
+        runFind($connection);
+        break;
     case 'query':
         runQuery($connection);
         break;
@@ -37,6 +40,19 @@ switch ($type) {
         break;
     default:
         runQuery($connection);
+}
+
+function runFind(PromiseInterface|QueryBuilder $connection)
+{
+    $connection->from('users')->find(11)->then(
+        function ($result) {
+            print_r($result);
+            echo count($result) . ' columns(s) in set' . PHP_EOL;
+        },
+        function (Exception $error) {
+            echo 'Error: ' . $error->getMessage() . PHP_EOL;
+        }
+    );
 }
 
 function runQuery(PromiseInterface|QueryBuilder $connection)
