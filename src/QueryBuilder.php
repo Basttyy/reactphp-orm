@@ -381,6 +381,20 @@ class QueryBuilder extends Builder
     }
 
     /**
+     * Run a truncate statement on the table.
+     *
+     * @return void
+     */
+    public function truncate()
+    {
+        $this->applyBeforeQueryCallbacks();
+
+        foreach ($this->grammar->compileTruncate($this) as $sql => $bindings) {
+            $this->_connection->statement($sql, $bindings);
+        }
+    }
+
+    /**
      * Execute the query and get the first result.
      *
      * @param  array|string  $columns
