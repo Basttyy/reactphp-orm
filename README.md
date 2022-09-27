@@ -77,10 +77,10 @@ $connection->from('users')->where('status', 'active')->get()->then(
  * [x] query()
  * [x] get()
  * [x] insert()
- * [ ] delete
- * [ ] Update
- * [ ] first()
- * [ ] find()
+ * [x] delete
+ * [x] Update
+ * [x] first()
+ * [x] find()
  * [ ] count
  * [ ] exists
  * [ ] InsertOrIgnore
@@ -111,10 +111,9 @@ $connection->from('users')->where('status', 'active')->get()->then(
  * [ ] average
  * [ ] aggregate
  * [ ] numericaggregate
- * [ ] truncate
+ * [x] truncate
  * [ ] newQuery
  * [ ] forSubQuery
- * [ ] raw
  * [ ] getProcessor
  * [ ] useWritePDO
  * [ ] clone
