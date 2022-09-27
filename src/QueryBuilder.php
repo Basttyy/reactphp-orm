@@ -280,8 +280,10 @@ class QueryBuilder extends Builder
      */
     protected function runSelect()
     {
+        $sql = $this->toSql();
+        $this->clearBindings();
         return $this->_connection->select(
-            $this->toSql(), $this->getBindings(), false, false, false, false
+            $sql, $this->getBindings(), false, false, false, false
         );
     }
 
@@ -344,10 +346,10 @@ class QueryBuilder extends Builder
         // Finally, we will run this query against the database connection and return
         // the results. We will need to also flatten these bindings before running
         // the query so they are all in one huge, flattened array for execution.
-        return $this->_connection->insert(
-            $this->grammar->compileInsert($this, $values),
-            $this->cleanBindings(Arr::flatten($values, 1))
-        );
+        $query = $this->grammar->compileInsert($this, $values);
+        $bindings = $this->cleanBindings(Arr::flatten($values, 1));
+        $this->clearBindings();
+        return $this->_connection->insert($query, $bindings);
     }
 
     /**
@@ -365,6 +367,8 @@ class QueryBuilder extends Builder
 
         $values = $this->cleanBindings($values);
 
+        $this->clearBindings();
+
         return $this->processor->processInsertGetId($this, $sql, $values, $sequence);
     }
 
@@ -379,10 +383,10 @@ class QueryBuilder extends Builder
         $this->applyBeforeQueryCallbacks();
 
         $sql = $this->grammar->compileUpdate($this, $values);
+        $bindings = $this->cleanBindings($this->grammar->prepareBindingsForUpdate($this->bindings, $values));
+        $this->clearBindings();
 
-        return $this->_connection->update($sql, $this->cleanBindings(
-            $this->grammar->prepareBindingsForUpdate($this->bindings, $values)
-        ));
+        return $this->_connection->update($sql, $bindings);
     }
 
     /**
@@ -401,12 +405,11 @@ class QueryBuilder extends Builder
         }
 
         $this->applyBeforeQueryCallbacks();
+        $sql = $this->grammar->compileDelete($this);
+        $bindings = $this->cleanBindings($this->grammar->prepareBindingsForDelete($this->bindings));
+        $this->clearBindings();
 
-        return $this->_connection->delete(
-            $this->grammar->compileDelete($this), $this->cleanBindings(
-                $this->grammar->prepareBindingsForDelete($this->bindings)
-            )
-        );
+        return $this->_connection->delete($sql, $bindings);
     }
 
     /**
@@ -418,7 +421,10 @@ class QueryBuilder extends Builder
     {
         $this->applyBeforeQueryCallbacks();
 
-        foreach ($this->grammar->compileTruncate($this) as $sql => $bindings) {
+        $truncate_query = $this->grammar->compileTruncate($this);
+        $this->clearBindings();
+
+        foreach ($truncate_query as $sql => $bindings) {
             $this->_connection->statement($sql, $bindings);
         }
     }
