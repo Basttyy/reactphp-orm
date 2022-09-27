@@ -166,8 +166,7 @@ class QueryConnection extends Connection
             $this->makeQuery($query, $this->prepareBindings($bindings))->then(
                 function (QueryResult $command) use ($deferred) {
                     echo "query ran success".PHP_EOL;
-                    $rows = $command->resultRows;
-                    $deferred->resolve($rows);
+                    $deferred->resolve($command->resultRows);
                 },
                 function (Exception $error) use($deferred){
                     echo 'Error: ' . $error->getMessage() . PHP_EOL;

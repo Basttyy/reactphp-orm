@@ -20,6 +20,9 @@ switch ($type) {
     case 'runfind':
         runFind($connection);
         break;
+    case 'runexists':
+        runExists($connection);
+        break;
     case 'query':
         runQuery($connection);
         break;
@@ -44,10 +47,22 @@ switch ($type) {
 
 function runFind(PromiseInterface|QueryBuilder $connection)
 {
-    $connection->from('users')->find(11)->then(
+    $connection->from('users')->find(3)->then(
         function ($result) {
             print_r($result);
             echo count($result) . ' columns(s) in set' . PHP_EOL;
+        },
+        function (Exception $error) {
+            echo 'Error: ' . $error->getMessage() . PHP_EOL;
+        }
+    );
+}
+
+function runExists(PromiseInterface|QueryBuilder $connection)
+{
+    $connection->from('users')->where('deleted_at', '!=', null)->exists()->then(
+        function (bool $result) {
+            echo $result ? 'record exists in database' : 'record does not exist in database' . PHP_EOL;
         },
         function (Exception $error) {
             echo 'Error: ' . $error->getMessage() . PHP_EOL;
