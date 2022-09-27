@@ -12,7 +12,7 @@ use React\Promise\PromiseInterface;
 
 $factory = new Factory();
 
-$connection = (new QueryBuilderWrapper($factory))->createLazyConnection('root:123456789@localhost/react-database');
+$connection = (new QueryBuilderWrapper($factory))->createLazyConnectionPool('root:123456789@localhost/react-database', 5);
 
 $type = isset($argv[1]) ? $argv[1] : 'query';
 
