@@ -29,6 +29,35 @@ class QueryBuilder extends Builder
      */
     public $processor;
 
+    
+    /**
+     * Indicates whether row locking is being used.
+     *
+     * @var string|bool
+     */
+    public $lock = false;
+
+    /**
+     * Whether use sharedlock for select.
+     *
+     * @var bool
+     */
+    public $sharedLock = false;
+
+    /**
+     * Whether to use nowait for select.
+     *
+     * @var bool
+     */
+    public $noWait = false;
+
+        /**
+     * Whether to skip locked rows for select.
+     *
+     * @var bool
+     */
+    public $skipLocked = false;
+
     // /**
     //  * Create a new query builder instance.
     //  *
@@ -424,5 +453,37 @@ class QueryBuilder extends Builder
     public function find($id, $columns = ['*'])
     {
         return $this->where('id', '=', $id)->first($columns);
+    }
+
+    /**
+     * Remove all of the expressions from a list of bindings.
+     *
+     * @return $this
+     */
+    protected function clearBindings()
+    {
+        foreach ($this->bindings as $binding => $values) {
+            $this->bindings[$binding] = [];
+        }
+        $this->orders = null;
+        $this->aggregate = null;
+        $this->columns = null;
+        $this->distinct = false;
+        $this->useSoftDelete = false;
+        $this->wheres = [];
+        $this->groups = null;
+        $this->havings = null;
+        $this->joins = null;
+        $this->limit = null;
+        $this->lock = false;
+        $this->sharedLock = false;
+        $this->noWait = false;
+        $this->skipLocked = false;
+        $this->offset = null;
+        $this->unionLimit = null;
+        $this->unionOffset = null;
+        $this->unionOrders = null;
+        $this->unions = null;
+        return $this;
     }
 }
