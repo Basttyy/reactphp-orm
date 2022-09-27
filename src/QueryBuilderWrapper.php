@@ -49,4 +49,36 @@ class QueryBuilderWrapper
 
         return $builder;
     }
+
+    
+    public function createLazyConnectionPool(string $uri, int $pool_size, $connection_selector = LazyConnectionPool::CS_ROUND_ROBIN)
+    {
+        $capsule = new Manager;
+
+        if (strpos($uri, '://') === false) {
+            $uri = 'mysql://' . $uri;
+        }
+
+        $parts = parse_url($uri);
+
+        $dbName = isset($parts['path']) ? rawurldecode(ltrim($parts['path'], '/')) : null;
+
+        if (is_null($dbName)) {
+            return \React\Promise\reject(new \InvalidArgumentException(
+                'Invalid Database name'
+            ));
+        }
+
+        $capsule->addConnection([
+            'driver' => 'mysql',
+            'database' => $parts['path'],
+        ]);
+
+        $builder = new QueryBuilder($capsule->getConnection());
+        //$builder = new QueryBuilder(new Connection($this->factory->createLazyConnection($uri)));
+        $connection = new QueryConnection(new LazyConnectionPool($this->factory, $uri, $pool_size, $connection_selector));
+        $builder->setConnection($connection);
+
+        return $builder;
+    }
 }

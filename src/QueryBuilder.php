@@ -6,16 +6,19 @@ use Exception;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Grammars\Grammar;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use React\MySQL\ConnectionInterface;
 use React\MySQL\QueryResult;
 use React\Promise\Deferred;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
 
+use function PHPSTORM_META\map;
+
 class QueryBuilder extends Builder
 {
     /**
-     * @var \Illuminate\Database\ConnectionInterface|QueryConnection
+     * @var QueryConnection
      */
     private $_connection;
 
@@ -25,6 +28,35 @@ class QueryBuilder extends Builder
      * @var \Basttyy\ReactphpOrm\QueryProcessor
      */
     public $processor;
+
+    
+    /**
+     * Indicates whether row locking is being used.
+     *
+     * @var string|bool
+     */
+    public $lock = false;
+
+    /**
+     * Whether use sharedlock for select.
+     *
+     * @var bool
+     */
+    public $sharedLock = false;
+
+    /**
+     * Whether to use nowait for select.
+     *
+     * @var bool
+     */
+    public $noWait = false;
+
+        /**
+     * Whether to skip locked rows for select.
+     *
+     * @var bool
+     */
+    public $skipLocked = false;
 
     // /**
     //  * Create a new query builder instance.
@@ -226,7 +258,7 @@ class QueryBuilder extends Builder
      * Execute the query as a "select" statement.
      *
      * @param  array|string  $columns
-     * @return PromiseInterface<\Illuminate\Support\Collection>
+     * @return PromiseInterface<\Illuminate\Support\Collection|Exception>
      */
     public function get($columns = ['*'])
     {
@@ -248,8 +280,11 @@ class QueryBuilder extends Builder
      */
     protected function runSelect()
     {
+        $sql = $this->toSql();
+        $bindings = $this->getBindings();
+        $this->clearBindings();
         return $this->_connection->select(
-            $this->toSql(), $this->getBindings(), false, false, false, false
+            $sql, $bindings, false, false, false, false
         );
     }
 
@@ -312,10 +347,10 @@ class QueryBuilder extends Builder
         // Finally, we will run this query against the database connection and return
         // the results. We will need to also flatten these bindings before running
         // the query so they are all in one huge, flattened array for execution.
-        return $this->_connection->insert(
-            $this->grammar->compileInsert($this, $values),
-            $this->cleanBindings(Arr::flatten($values, 1))
-        );
+        $query = $this->grammar->compileInsert($this, $values);
+        $bindings = $this->cleanBindings(Arr::flatten($values, 1));
+        $this->clearBindings();
+        return $this->_connection->insert($query, $bindings);
     }
 
     /**
@@ -333,6 +368,197 @@ class QueryBuilder extends Builder
 
         $values = $this->cleanBindings($values);
 
+        $this->clearBindings();
+
         return $this->processor->processInsertGetId($this, $sql, $values, $sequence);
+    }
+
+    /**
+     * Update records in the database.
+     *
+     * @param  array  $values
+     * @return PromiseInterface<int|Exception>
+     */
+    public function update(array $values)
+    {
+        $this->applyBeforeQueryCallbacks();
+
+        $sql = $this->grammar->compileUpdate($this, $values);
+        $bindings = $this->cleanBindings($this->grammar->prepareBindingsForUpdate($this->bindings, $values));
+        $this->clearBindings();
+
+        return $this->_connection->update($sql, $bindings);
+    }
+
+    /**
+     * Delete records from the database.
+     *
+     * @param  mixed  $id
+     * @return PromiseInterface<int|Exception>
+     */
+    public function delete($id = null)
+    {
+        // If an ID is passed to the method, we will set the where clause to check the
+        // ID to let developers to simply and quickly remove a single row from this
+        // database without manually specifying the "where" clauses on the query.
+        if (! is_null($id)) {
+            $this->where($this->from.'.id', '=', $id);
+        }
+
+        $this->applyBeforeQueryCallbacks();
+        $sql = $this->grammar->compileDelete($this);
+        $bindings = $this->cleanBindings($this->grammar->prepareBindingsForDelete($this->bindings));
+        $this->clearBindings();
+
+        return $this->_connection->delete($sql, $bindings);
+    }
+
+    /**
+     * Run a truncate statement on the table.
+     *
+     * @return void
+     */
+    public function truncate()
+    {
+        $this->applyBeforeQueryCallbacks();
+
+        $truncate_query = $this->grammar->compileTruncate($this);
+        $this->clearBindings();
+
+        foreach ($truncate_query as $sql => $bindings) {
+            $this->_connection->statement($sql, $bindings);
+        }
+    }
+
+    /**
+     * Retrieve the "count" result of the query.
+     *
+     * @param  string  $columns
+     * @return PromiseInterface<int|Exception>
+     */
+    public function count($columns = '*')
+    {
+        return $this->aggregate(__FUNCTION__, Arr::wrap($columns));
+    }
+
+    /**
+     * Execute the query and get the first result.
+     *
+     * @param  array|string  $columns
+     * @return PromiseInterface<\Illuminate\Database\Eloquent\Model|object|array|static|null|Exception>
+     */
+    public function first($columns = ['*'])
+    {
+        return new \React\Promise\Promise(function ($resolve, $reject) use ($columns){
+            $this->take(1)->get($columns)->then(
+                function (Collection $data) use ($resolve){
+                    $resolve($data->first());
+                },
+                function (Exception $ex) use ($reject){
+                    $reject($ex);
+                }
+            );
+        });
+    }
+    
+    /**
+     * Execute a query for a single record by ID.
+     *
+     * @param  int|string  $id
+     * @param  array|string  $columns
+     * @return PromiseInterface<mixed|static>
+     */
+    public function find($id, $columns = ['*'])
+    {
+        return $this->where('id', '=', $id)->first($columns);
+    }
+
+    /**
+     * Determine if any rows exist for the current query.
+     *
+     * @return PromiseInterface<bool|Exception>
+     */
+    public function exists()
+    {
+        $this->applyBeforeQueryCallbacks();
+        $sql = $this->grammar->compileExists($this);
+        $binding = $this->getBindings();
+        
+        return new \React\Promise\Promise(function ($resolve, $reject) use ($sql, $binding){
+            $this->_connection->select($sql, $binding, false, false, false, false)->then(
+                function (array $results) use ($resolve, $reject) {
+                    // If the results have rows, we will get the row and see if the exists column is a
+                    // boolean true. If there are no results for this query we will return false as
+                    // there are no rows for this query at all, and we can return that info here.
+                    if (isset($results[0])) {
+                        $results = (array) $results[0];
+
+                        $resolve((bool) $results['exists']);
+                    }
+                    $reject(false);
+                },
+                function (Exception $ex) use ($reject) {
+                    $reject($ex);
+                }
+            );
+        });
+    }
+    
+    /**
+     * Execute an aggregate function on the database.
+     *
+     * @param  string  $function
+     * @param  array  $columns
+     * @return PromiseInterface<int|Exception>
+     */
+    public function aggregate($function, $columns = ['*'])
+    {
+        return new \React\Promise\Promise(function ($resolve, $reject) use ($function, $columns) {
+            $this->cloneWithout($this->unions || $this->havings ? [] : ['columns'])
+                ->cloneWithoutBindings($this->unions || $this->havings ? [] : ['select'])
+                ->setAggregate($function, $columns)
+                ->get($columns)->then(
+                    function (Collection $results) use ($resolve) {
+                        if (! $results->isEmpty()) {
+                            $resolve((int) array_change_key_case((array) $results[0])['aggregate']);
+                        } else $resolve(0);
+                    },
+                    function (Exception $ex) use ($reject) {
+                        $reject($ex);
+                    }
+                );
+        });
+    }
+
+    /**
+     * Remove all of the expressions from a list of bindings.
+     *
+     * @return $this
+     */
+    protected function clearBindings()
+    {
+        foreach ($this->bindings as $binding => $values) {
+            $this->bindings[$binding] = [];
+        }
+        $this->orders = null;
+        $this->aggregate = null;
+        $this->columns = null;
+        $this->distinct = false;
+        $this->useSoftDelete = false;
+        $this->wheres = [];
+        $this->groups = null;
+        $this->havings = null;
+        $this->joins = null;
+        $this->limit = null;
+        $this->lock = false;
+        $this->sharedLock = false;
+        $this->noWait = false;
+        $this->skipLocked = false;
+        $this->offset = null;
+        $this->unionLimit = null;
+        $this->unionOffset = null;
+        $this->unionOrders = null;
+        $this->unions = null;
+        return $this;
     }
 }
