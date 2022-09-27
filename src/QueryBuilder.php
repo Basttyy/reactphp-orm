@@ -431,6 +431,17 @@ class QueryBuilder extends Builder
     }
 
     /**
+     * Retrieve the "count" result of the query.
+     *
+     * @param  string  $columns
+     * @return PromiseInterface<int|Exception>
+     */
+    public function count($columns = '*')
+    {
+        return $this->aggregate(__FUNCTION__, Arr::wrap($columns));
+    }
+
+    /**
      * Execute the query and get the first result.
      *
      * @param  array|string  $columns
@@ -490,6 +501,32 @@ class QueryBuilder extends Builder
                     $reject($ex);
                 }
             );
+        });
+    }
+    
+    /**
+     * Execute an aggregate function on the database.
+     *
+     * @param  string  $function
+     * @param  array  $columns
+     * @return PromiseInterface<int|Exception>
+     */
+    public function aggregate($function, $columns = ['*'])
+    {
+        return new \React\Promise\Promise(function ($resolve, $reject) use ($function, $columns) {
+            $this->cloneWithout($this->unions || $this->havings ? [] : ['columns'])
+                ->cloneWithoutBindings($this->unions || $this->havings ? [] : ['select'])
+                ->setAggregate($function, $columns)
+                ->get($columns)->then(
+                    function (Collection $results) use ($resolve) {
+                        if (! $results->isEmpty()) {
+                            $resolve((int) array_change_key_case((array) $results[0])['aggregate']);
+                        } else $resolve(0);
+                    },
+                    function (Exception $ex) use ($reject) {
+                        $reject($ex);
+                    }
+                );
         });
     }
 
