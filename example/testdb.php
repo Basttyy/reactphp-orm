@@ -23,6 +23,9 @@ switch ($type) {
     case 'runexists':
         runExists($connection);
         break;
+    case 'runcount':
+        runCount($connection);
+        break;
     case 'query':
         runQuery($connection);
         break;
@@ -63,6 +66,18 @@ function runExists(PromiseInterface|QueryBuilder $connection)
     $connection->from('users')->where('deleted_at', '!=', null)->exists()->then(
         function (bool $result) {
             echo $result ? 'record exists in database' : 'record does not exist in database' . PHP_EOL;
+        },
+        function (Exception $error) {
+            echo 'Error: ' . $error->getMessage() . PHP_EOL;
+        }
+    );
+}
+
+function runCount(PromiseInterface|QueryBuilder $connection)
+{
+    $connection->from('users')->where('username', 'basttyy')->count()->then(
+        function (int $result) {
+            echo "$result total records matched" . PHP_EOL;
         },
         function (Exception $error) {
             echo 'Error: ' . $error->getMessage() . PHP_EOL;
