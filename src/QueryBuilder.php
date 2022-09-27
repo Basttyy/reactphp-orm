@@ -399,4 +399,16 @@ class QueryBuilder extends Builder
             );
         });
     }
+    
+    /**
+     * Execute a query for a single record by ID.
+     *
+     * @param  int|string  $id
+     * @param  array|string  $columns
+     * @return PromiseInterface<mixed|static>
+     */
+    public function find($id, $columns = ['*'])
+    {
+        return $this->where('id', '=', $id)->first($columns);
+    }
 }
