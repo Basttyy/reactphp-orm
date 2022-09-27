@@ -23,6 +23,9 @@ switch ($type) {
     case 'runget':
         runGet($connection);
         break;
+    case 'runfirst':
+        runFirst($connection);
+        break;
     case 'insert':
         runInsert($connection,  isset($argv[2]) ? $argv[2] : 'false');
         break;
@@ -58,6 +61,19 @@ function runGet(PromiseInterface|QueryBuilder $connection)
         },
         function (Exception $error) {
             echo 'Error: ' . $error->getMessage() . PHP_EOL;
+        }
+    );
+}
+
+function runFirst(PromiseInterface|QueryBuilder $connection)
+{
+    $connection->from('users')->where('updated_at', null)->first()->then(
+        function (array $resultRows) {
+            print_r($resultRows);
+            echo count($resultRows) . ' columns(s) in set' . PHP_EOL;
+        },
+        function (Exception $ex) {
+            echo $ex->getMessage().PHP_EOL;
         }
     );
 }

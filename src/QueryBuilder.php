@@ -384,7 +384,7 @@ class QueryBuilder extends Builder
      * Execute the query and get the first result.
      *
      * @param  array|string  $columns
-     * @return \Illuminate\Database\Eloquent\Model|object|static|null
+     * @return PromiseInterface<\Illuminate\Database\Eloquent\Model|object|array|static|null|Exception>
      */
     public function first($columns = ['*'])
     {
