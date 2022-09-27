@@ -6,11 +6,14 @@ use Exception;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Grammars\Grammar;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use React\MySQL\ConnectionInterface;
 use React\MySQL\QueryResult;
 use React\Promise\Deferred;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
+
+use function PHPSTORM_META\map;
 
 class QueryBuilder extends Builder
 {
@@ -226,7 +229,7 @@ class QueryBuilder extends Builder
      * Execute the query as a "select" statement.
      *
      * @param  array|string  $columns
-     * @return PromiseInterface<\Illuminate\Support\Collection>
+     * @return PromiseInterface<\Illuminate\Support\Collection|Exception>
      */
     public function get($columns = ['*'])
     {
@@ -375,5 +378,25 @@ class QueryBuilder extends Builder
                 $this->grammar->prepareBindingsForDelete($this->bindings)
             )
         );
+    }
+
+    /**
+     * Execute the query and get the first result.
+     *
+     * @param  array|string  $columns
+     * @return \Illuminate\Database\Eloquent\Model|object|static|null
+     */
+    public function first($columns = ['*'])
+    {
+        return new \React\Promise\Promise(function ($resolve, $reject) use ($columns){
+            $this->take(1)->get($columns)->then(
+                function (Collection $data) use ($resolve){
+                    $resolve($data->first());
+                },
+                function (Exception $ex) use ($reject){
+                    $reject($ex);
+                }
+            );
+        });
     }
 }
