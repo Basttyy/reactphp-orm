@@ -18,7 +18,7 @@ use function PHPSTORM_META\map;
 class QueryBuilder extends Builder
 {
     /**
-     * @var \Illuminate\Database\ConnectionInterface|QueryConnection
+     * @var QueryConnection
      */
     private $_connection;
 
@@ -281,9 +281,10 @@ class QueryBuilder extends Builder
     protected function runSelect()
     {
         $sql = $this->toSql();
+        $bindings = $this->getBindings();
         $this->clearBindings();
         return $this->_connection->select(
-            $sql, $this->getBindings(), false, false, false, false
+            $sql, $bindings, false, false, false, false
         );
     }
 
@@ -459,6 +460,37 @@ class QueryBuilder extends Builder
     public function find($id, $columns = ['*'])
     {
         return $this->where('id', '=', $id)->first($columns);
+    }
+
+    /**
+     * Determine if any rows exist for the current query.
+     *
+     * @return PromiseInterface<bool|Exception>
+     */
+    public function exists()
+    {
+        $this->applyBeforeQueryCallbacks();
+        $sql = $this->grammar->compileExists($this);
+        $binding = $this->getBindings();
+        
+        return new \React\Promise\Promise(function ($resolve, $reject) use ($sql, $binding){
+            $this->_connection->select($sql, $binding, false, false, false, false)->then(
+                function (array $results) use ($resolve, $reject) {
+                    // If the results have rows, we will get the row and see if the exists column is a
+                    // boolean true. If there are no results for this query we will return false as
+                    // there are no rows for this query at all, and we can return that info here.
+                    if (isset($results[0])) {
+                        $results = (array) $results[0];
+
+                        $resolve((bool) $results['exists']);
+                    }
+                    $reject(false);
+                },
+                function (Exception $ex) use ($reject) {
+                    $reject($ex);
+                }
+            );
+        });
     }
 
     /**

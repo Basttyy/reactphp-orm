@@ -82,7 +82,7 @@ $connection->from('users')->where('status', 'active')->get()->then(
  * [x] first()
  * [x] find()
  * [ ] count
- * [ ] exists
+ * [x] exists
  * [ ] InsertOrIgnore
  * [ ] InsertUsing
  * [ ] UpdateOrInsert
