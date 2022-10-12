@@ -181,6 +181,7 @@ function runDelete(PromiseInterface|QueryBuilder $connection)
             echo $ex->getMessage().PHP_EOL;
         }
     );
+    $connection->from('users')->order
 }
 
 $connection->quit();

@@ -14,9 +14,10 @@ class QueryBuilderWrapper
      */
     public $factory;
 
-    public function __construct($factory)
+    public function __construct($factory = null)
     {
-        $this->factory = $factory;
+        if (!\is_null($factory))
+            $this->factory = $factory;
     }
 
     public function createLazyConnection($uri)
@@ -49,7 +50,6 @@ class QueryBuilderWrapper
 
         return $builder;
     }
-
     
     public function createLazyConnectionPool(string $uri, int $pool_size, $connection_selector = LazyConnectionPool::CS_ROUND_ROBIN)
     {
@@ -77,6 +77,27 @@ class QueryBuilderWrapper
         $builder = new QueryBuilder($capsule->getConnection());
         //$builder = new QueryBuilder(new Connection($this->factory->createLazyConnection($uri)));
         $connection = new QueryConnection(new LazyConnectionPool($this->factory, $uri, $pool_size, $connection_selector));
+        $builder->setConnection($connection);
+
+        return $builder;
+    }
+
+    public function setLazyConnectionPool(ConnectionInterface $connection, string $db_name = '')
+    {
+        return $this->setLazyConnection($connection, $db_name);
+    }
+
+    public function setLazyConnection(ConnectionInterface $connection, string $db_name = '')
+    {
+        $capsule = new Manager;
+
+        $capsule->addConnection([
+            'driver' => 'mysql',
+            'database' => $db_name,
+        ]);
+
+        $builder = new QueryBuilder($capsule->getConnection());
+        $connection = new QueryConnection($connection);
         $builder->setConnection($connection);
 
         return $builder;
