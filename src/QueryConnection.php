@@ -165,11 +165,11 @@ class QueryConnection extends Connection
 
             $this->makeQuery($query, $this->prepareBindings($bindings))->then(
                 function (QueryResult $command) use ($deferred) {
-                    echo "query ran success".PHP_EOL;
+                    //echo "query ran success".PHP_EOL;
                     $deferred->resolve($command->resultRows);
                 },
                 function (Exception $error) use($deferred){
-                    echo 'Error: ' . $error->getMessage() . PHP_EOL;
+                    //echo 'Error: ' . $error->getMessage() . PHP_EOL;
                     $deferred->reject($error);
                 }
             );
@@ -183,7 +183,7 @@ class QueryConnection extends Connection
      *
      * @param  string  $query
      * @param  array  $bindings
-     * @return PromiseInterface<bool|int|Exception>
+     * @return PromiseInterface<QueryResult|Exception>
      */
     public function statement($query, $bindings = [])
     {
@@ -196,15 +196,17 @@ class QueryConnection extends Connection
             $this->makeQuery($query, $this->prepareBindings($bindings))->then(
                 function (QueryResult $command) use ($deffered) {
                     $this->recordsHaveBeenModified();
-                    if (isset($command->resultRows)) {
+                    //if (isset($command->resultRows)) {
                         // this is a response to a SELECT etc. with some rows (0+)
-                        echo count($command->resultRows) . ' row(s) in set' . PHP_EOL;
-                        $deffered->resolve(true);
-                    } else {
+                        //echo count($command->resultRows) . ' row(s) in set' . PHP_EOL;
+                    //    $deffered->resolve(true);
+                    //} else {
                         // this is an OK message in response to an UPDATE etc.
-                        echo 'Query OK, ' . $command->affectedRows . ' row(s) affected' . PHP_EOL;
-                        $command->insertId < 1 ? $deffered->reject(false) : $deffered->resolve($command->insertId);
-                    }
+                        //echo 'Query OK, ' . $command->affectedRows . ' row(s) affected' . PHP_EOL;
+                        // do not return an rejection
+                        //$command->insertId < 1 ? $deffered->resolve(false) : $deffered->resolve($command->affectedRows);
+                    //}
+                    $deffered->resolve($command);
                 },
                 function (Exception $error) use ($deffered) {
                     $deffered->reject($error);
@@ -223,7 +225,7 @@ class QueryConnection extends Connection
      */
     public function affectingStatement($query, $bindings = [])
     {
-        echo $query.PHP_EOL.PHP_EOL;
+        //echo $query.PHP_EOL.PHP_EOL;
         return $this->run($query, $bindings, function ($query, $bindings) {
             if ($this->pretending()) {
                 return \React\Promise\resolve(0);
@@ -238,8 +240,10 @@ class QueryConnection extends Connection
                 function (QueryResult $command) use ($deffered) {
                     $this->recordsHaveBeenModified();
                     // this is an OK message in response to an UPDATE etc.
-                    echo 'Query OK, ' . $command->affectedRows . ' row(s) affected' . PHP_EOL;
-                    $command->affectedRows < 1 ? $deffered->reject(false) : $deffered->resolve($command->affectedRows);
+                    //echo 'Query OK, ' . $command->affectedRows . ' row(s) affected' . PHP_EOL;
+                    // just return rows affected
+                    //$command->affectedRows < 1 ? $deffered->resolve(false) : $deffered->resolve($command->affectedRows);
+                    $deffered->resolve($command->affectedRows);
                 },
                 function (Exception $error) use ($deffered) {
                     $deffered->reject($error);
@@ -363,6 +367,17 @@ class QueryConnection extends Connection
         return new QueryBuilder(
             $this, $this->getQueryGrammar(), $this->getPostProcessor()
         );
+    }
+
+    /**
+     * Ping to dabata server.
+     *
+     * @var void
+     * @return PromiseInterface
+     */
+    public function ping()
+    {
+        return $this->getConnection()->ping();
     }
 
     /**

@@ -29,7 +29,7 @@ class QueryBuilder extends Builder
      */
     public $processor;
 
-    
+
     /**
      * Indicates whether row locking is being used.
      *
@@ -92,8 +92,19 @@ class QueryBuilder extends Builder
     }
 
     /**
+     * Ping the database.
+     *
+     * @var void
+     * @return PromiseInterface
+     */
+    public function ping()
+    {
+        return $this->_connection->ping();
+    }
+
+    /**
      * Quit the connection to the db
-     * 
+     *
      * @var void
      * @return PromiseInterface
      */
@@ -168,7 +179,7 @@ class QueryBuilder extends Builder
 
     /**
      * Set the connetion object
-     * 
+     *
      * @param QueryConnection $connection
      * @return void
      */
@@ -180,7 +191,7 @@ class QueryBuilder extends Builder
 
     /**
      * Get the connetion object
-     * 
+     *
      * @param void
      * @return QueryConnection
      */
@@ -250,7 +261,6 @@ class QueryBuilder extends Builder
     public function query()
     {
         $sql = $this->toSql();
-        echo $sql.PHP_EOL.PHP_EOL;
         return $this->_connection->makeQuery($sql, $this->getBindings());
     }
 
@@ -272,7 +282,19 @@ class QueryBuilder extends Builder
             });
         });
     }
-    
+
+    /**
+     * Execute an SQL statement and return the boolean result.
+     *
+     * @param  string  $query
+     * @param  array  $bindings
+     * @return PromiseInterface<QueryResult|Exception>
+     */
+    public function statement($query, $bindings = [])
+    {
+        return $this->_connection->statement($query, $bindings);
+    }
+
     /**
      * Run the query as a "select" statement against the connection.
      *
@@ -311,7 +333,7 @@ class QueryBuilder extends Builder
 
         return $result;
     }
-    
+
     /**
      * Insert new records into the database.
      *
@@ -460,7 +482,7 @@ class QueryBuilder extends Builder
             );
         });
     }
-    
+
     /**
      * Execute a query for a single record by ID.
      *
@@ -483,7 +505,7 @@ class QueryBuilder extends Builder
         $this->applyBeforeQueryCallbacks();
         $sql = $this->grammar->compileExists($this);
         $binding = $this->getBindings();
-        
+
         return new \React\Promise\Promise(function ($resolve, $reject) use ($sql, $binding){
             $this->_connection->select($sql, $binding, false, false, false, false)->then(
                 function (array $results) use ($resolve, $reject) {
@@ -503,7 +525,7 @@ class QueryBuilder extends Builder
             );
         });
     }
-    
+
     /**
      * Execute an aggregate function on the database.
      *
@@ -544,7 +566,7 @@ class QueryBuilder extends Builder
         $this->aggregate = null;
         $this->columns = null;
         $this->distinct = false;
-        $this->useSoftDelete = false;
+        //$this->useSoftDelete = false;
         $this->wheres = [];
         $this->groups = null;
         $this->havings = null;

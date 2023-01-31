@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require './vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use Basttyy\ReactphpOrm\QueryBuilderWrapper;
 use Basttyy\ReactphpOrm\QueryBuilder;
@@ -12,9 +12,11 @@ use React\Promise\PromiseInterface;
 
 $factory = new Factory();
 
-$connection = (new QueryBuilderWrapper($factory))->createLazyConnectionPool('root:123456789@localhost/react-database', 5);
+$connection = (new QueryBuilderWrapper($factory))->createLazyConnectionPool('root:x1234567@127.0.0.1:3306/react-database', 5);
 
-$type = isset($argv[1]) ? $argv[1] : 'query';
+$type = $argv[1] ?? 'query';
+
+var_dump($type);
 
 switch ($type) {
     case 'runfind':
@@ -36,7 +38,7 @@ switch ($type) {
         runFirst($connection);
         break;
     case 'insert':
-        runInsert($connection,  isset($argv[2]) ? $argv[2] : 'false');
+        runInsert($connection, $argv[2] ?? 'false');
         break;
     case 'runupdate':
         runUpdate($connection);
@@ -173,7 +175,7 @@ function runUpdate(PromiseInterface|QueryBuilder $connection)
 
 function runDelete(PromiseInterface|QueryBuilder $connection)
 {
-    $connection->from('users')->where('id', 9)->delete()->then(
+    $connection->from('users')->where('id', 1)->delete()->then(
         function (int $result) {
             echo "deleted $result record successfully".PHP_EOL;
         },
