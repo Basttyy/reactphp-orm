@@ -11,8 +11,6 @@ class Wrapper
 {
     private array $parts;
 
-    private ?string $dbName;
-
     public function __construct(private Factory $factory, #[\SensitiveParameter] private string $uri)
     {
         if (strpos($this->uri, '://') === false) {
@@ -21,9 +19,9 @@ class Wrapper
 
         $this->parts = parse_url($this->uri);
 
-        $this->dbName = isset($this->parts['path']) ? rawurldecode(ltrim($this->parts['path'], '/')) : null;
+        $dbName = isset($this->parts['path']) ? rawurldecode(ltrim($this->parts['path'], '/')) : null;
 
-        if (is_null($this->dbName)) {
+        if (is_null($dbName)) {
             throw new \InvalidArgumentException('Invalid Database name');
         }
     }
@@ -35,7 +33,7 @@ class Wrapper
         $capsule->addConnection([
             'driver' => 'mysql',
             'database' => $this->parts['path'],
-        ], $this->dbName);
+        ]);
 
         $builder = new Builder($capsule->getConnection());
         $connection = new Connection($callback);
