@@ -1,15 +1,16 @@
 <?php
-namespace Basttyy\ReactphpOrm;
+namespace Basttyy\ReactphpOrm\Query;
 
+use Basttyy\ReactphpOrm\PromiseInterface;
 use Exception;
-use Illuminate\Database\Query\Processors\Processor;
+use Illuminate\Database\Query\Processors\Processor as IllProcessor;
 
-class QueryProcessor extends Processor
+class Processor extends IllProcessor
 {
     /**
      * Process the results of a "select" query.
      *
-     * @param  QueryBuilder  $query
+     * @param  Builder  $query
      * @param  PromiseInterface<array>  $results
      * @return PromiseInterface<array>
      */
@@ -21,7 +22,7 @@ class QueryProcessor extends Processor
     /**
      * Process an  "insert get ID" query.
      *
-     * @param  QueryBuilder  $query
+     * @param  Builder  $query
      * @param  string  $sql
      * @param  array  $values
      * @param  string|null  $sequence

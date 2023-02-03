@@ -3,16 +3,14 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Basttyy\ReactphpOrm\QueryBuilderWrapper;
-use Basttyy\ReactphpOrm\QueryBuilder;
+use Basttyy\ReactphpOrm\Wrapper;
+use Basttyy\ReactphpOrm\Query\Builder;
 use Illuminate\Support\Collection;
 use React\MySQL\Factory;
 use React\MySQL\QueryResult;
 use React\Promise\PromiseInterface;
 
-$factory = new Factory();
-
-$connection = (new QueryBuilderWrapper($factory))->createLazyConnectionPool('root:x1234567@127.0.0.1:3306/react-database', 5);
+$connection = (new Wrapper(new Factory(), 'root:x1234567@127.0.0.1:3306/react-database'))->createLazyConnectionPool(5);
 
 $type = $argv[1] ?? 'query';
 
@@ -50,7 +48,7 @@ switch ($type) {
         runQuery($connection);
 }
 
-function runFind(PromiseInterface|QueryBuilder $connection)
+function runFind(PromiseInterface|Builder $connection)
 {
     $connection->from('users')->find(3)->then(
         function ($result) {
@@ -63,7 +61,7 @@ function runFind(PromiseInterface|QueryBuilder $connection)
     );
 }
 
-function runExists(PromiseInterface|QueryBuilder $connection)
+function runExists(PromiseInterface|Builder $connection)
 {
     $connection->from('users')->where('deleted_at', '!=', null)->exists()->then(
         function (bool $result) {
@@ -75,7 +73,7 @@ function runExists(PromiseInterface|QueryBuilder $connection)
     );
 }
 
-function runCount(PromiseInterface|QueryBuilder $connection)
+function runCount(PromiseInterface|Builder $connection)
 {
     $connection->from('users')->where('username', 'basttyy')->count()->then(
         function (int $result) {
@@ -87,7 +85,7 @@ function runCount(PromiseInterface|QueryBuilder $connection)
     );
 }
 
-function runQuery(PromiseInterface|QueryBuilder $connection)
+function runQuery(PromiseInterface|Builder $connection)
 {
     $connection->from('users')->where('status', 'active')->query()->then(
         function (QueryResult $command) {
@@ -100,7 +98,7 @@ function runQuery(PromiseInterface|QueryBuilder $connection)
     );
 }
 
-function runGet(PromiseInterface|QueryBuilder $connection)
+function runGet(PromiseInterface|Builder $connection)
 {
     $connection->from('users')->where('status', 'active')->get()->then(
         function(Collection $data) {
@@ -113,7 +111,7 @@ function runGet(PromiseInterface|QueryBuilder $connection)
     );
 }
 
-function runFirst(PromiseInterface|QueryBuilder $connection)
+function runFirst(PromiseInterface|Builder $connection)
 {
     $connection->from('users')->where('updated_at', null)->first()->then(
         function (array $resultRows) {
@@ -126,7 +124,7 @@ function runFirst(PromiseInterface|QueryBuilder $connection)
     );
 }
 
-function runInsert(PromiseInterface|QueryBuilder $connection, string $getid)
+function runInsert(PromiseInterface|Builder $connection, string $getid)
 {
     $values = [
         'username' => 'basttyy',
@@ -156,7 +154,7 @@ function runInsert(PromiseInterface|QueryBuilder $connection, string $getid)
     }
 }
 
-function runUpdate(PromiseInterface|QueryBuilder $connection)
+function runUpdate(PromiseInterface|Builder $connection)
 {
     $values = [
         'username' => 'bushman',
@@ -173,7 +171,7 @@ function runUpdate(PromiseInterface|QueryBuilder $connection)
     );
 }
 
-function runDelete(PromiseInterface|QueryBuilder $connection)
+function runDelete(PromiseInterface|Builder $connection)
 {
     $connection->from('users')->where('id', 1)->delete()->then(
         function (int $result) {

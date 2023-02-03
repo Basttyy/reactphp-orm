@@ -21,16 +21,13 @@ composer require basttyy/reactphp-orm
 //import
 require './vendor/autoload.php';
 
-use Basttyy\ReactphpOrm\QueryBuilderWrapper;
-use Basttyy\ReactphpOrm\QueryBuilder;
-use React\MySQL\Factory;
-use React\MySQL\QueryResult;
+use Basttyy\ReactphpOrm\Wrapper;use React\MySQL\Factory;use React\MySQL\QueryResult;
 
 #create react/mysql factory
 $factory = new Factory();
 
 #create querybuilder connection object
-$connection = (new QueryBuilderWrapper($factory))->createLazyConnection('root:123456789@localhost/react-database');
+$connection = (new Wrapper($factory))->createLazyConnection('root:123456789@localhost/react-database');
 
 #run an insert query
 $values = [

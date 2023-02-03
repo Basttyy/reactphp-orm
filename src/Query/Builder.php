@@ -1,31 +1,28 @@
 <?php
 declare(strict_types=1);
-namespace Basttyy\ReactphpOrm;
+namespace Basttyy\ReactphpOrm\Query;
 
+use Basttyy\ReactphpOrm\ReadableStreamInterface;
 use Exception;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\Builder as IllBuilder;
 use Illuminate\Database\Query\Grammars\Grammar;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use React\MySQL\ConnectionInterface;
 use React\MySQL\QueryResult;
-use React\Promise\Deferred;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
 
-use function PHPSTORM_META\map;
-
-class QueryBuilder extends Builder
+class Builder extends IllBuilder
 {
     /**
-     * @var QueryConnection
+     * @var Connection
      */
     private $_connection;
 
     /**
      * The database query post processor instance.
      *
-     * @var \Basttyy\ReactphpOrm\QueryProcessor
+     * @var \Basttyy\ReactphpOrm\Query\Processor
      */
     public $processor;
 
@@ -78,14 +75,14 @@ class QueryBuilder extends Builder
     /**
      * Create a new query builder instance.
      *
-     * @param  \Illuminate\Database\ConnectionInterface|QueryConnection  $connection
+     * @param  \Illuminate\Database\ConnectionInterface|Connection  $connection
      * @param  \Illuminate\Database\Query\Grammars\Grammar|null  $grammar
-     * @param  QueryProcessor|null  $processor
+     * @param  Processor|null  $processor
      * @return void
      */
-    public function __construct(\Illuminate\Database\ConnectionInterface|QueryConnection $connection,
-                                Grammar $grammar = null,
-                                QueryProcessor $processor = null)
+    public function __construct(\Illuminate\Database\ConnectionInterface|Connection $connection,
+                                Grammar                                             $grammar = null,
+                                Processor                                           $processor = null)
     {
         $this->_connection = $connection;
         $this->grammar = $grammar ?: $connection->getQueryGrammar();
@@ -180,10 +177,10 @@ class QueryBuilder extends Builder
     /**
      * Set the connetion object
      *
-     * @param QueryConnection $connection
+     * @param Connection $connection
      * @return void
      */
-    public function setConnection(QueryConnection $connection)
+    public function setConnection(Connection $connection)
     {
         $this->_connection = $connection;
         $this->processor = $this->_connection->getPostProcessor();
@@ -193,7 +190,7 @@ class QueryBuilder extends Builder
      * Get the connetion object
      *
      * @param void
-     * @return QueryConnection
+     * @return Connection
      */
     public function getConnection()
     {

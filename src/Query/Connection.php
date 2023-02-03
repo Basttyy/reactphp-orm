@@ -1,19 +1,18 @@
 <?php
 declare(strict_types=1);
-namespace Basttyy\ReactphpOrm;
+namespace Basttyy\ReactphpOrm\Query;
 
+use Basttyy\ReactphpOrm\Query\Processor as Processor;
 use Closure;
 use Exception;
-use Illuminate\Database\Connection;
-use React\MySQL\Exception as QueryException;
+use Illuminate\Database\Connection as IllConnection;
 use React\MySQL\ConnectionInterface;
+use React\MySQL\Exception as QueryException;
 use React\MySQL\QueryResult;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
-use Basttyy\ReactphpOrm\QueryProcessor as Processor;
-use React\Promise\Promise;
 
-class QueryConnection extends Connection
+class Connection extends IllConnection
 {
     /**
      * The active PDO connection.
@@ -360,11 +359,11 @@ class QueryConnection extends Connection
     /**
      * Get a new query builder instance.
      *
-     * @return QueryBuilder
+     * @return Builder
      */
     public function query()
     {
-        return new QueryBuilder(
+        return new Builder(
             $this, $this->getQueryGrammar(), $this->getPostProcessor()
         );
     }
