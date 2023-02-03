@@ -2,7 +2,7 @@
 
  A database ORM for reactphp based on [illuminate/database](https://packagist.org/packages/illuminate/database) and [react/mysql](https://packagist.org/packages/react/mysql)
 
-## Project Informations
+## Project Information
 
 [![Code Coverage](https://img.shields.io/badge/coverage-5%25-orange)]()
 
@@ -26,8 +26,8 @@ use Basttyy\ReactphpOrm\Wrapper;use React\MySQL\Factory;use React\MySQL\QueryRes
 #create react/mysql factory
 $factory = new Factory();
 
-#create querybuilder connection object
-$connection = (new Wrapper($factory))->createLazyConnection('root:123456789@localhost/react-database');
+#create qbuilder connection object
+$connection = (new Wrapper($factory, 'root:123456789@localhost/react-database'))->createLazyConnection();
 
 #run an insert query
 $values = [
