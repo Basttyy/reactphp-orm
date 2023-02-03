@@ -35,7 +35,7 @@ class Wrapper
         $capsule->addConnection([
             'driver' => 'mysql',
             'database' => $this->parts['path'],
-        ]);
+        ], $this->dbName);
 
         $builder = new Builder($capsule->getConnection());
         $connection = new Connection($callback);
